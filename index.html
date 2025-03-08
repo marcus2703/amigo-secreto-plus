@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./src/assets/styles/reset.css">
+    <link rel="stylesheet" href="./src/assets/styles/base.css">
+    <link rel="stylesheet" href="./src/assets/styles/layout.css">
+    <link rel="stylesheet" href="./src/assets/styles/components.css">
+    <link rel="stylesheet" href="./src/assets/styles/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Delius&family=Delius+Unicase&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <title>Desafio Amigo Secreto</title>
+</head>
+<body>
+    <section class="main-content">
+        <header class="main-content__header">
+            <h1>Desafio do Amigo Secreto</h1>
+            <h2 id="lista-nome"></h2>
+        </header>
+        <main class="main-content__main">
+            <div class="main-content__main_text-area">
+                <p>Insira no formulário abaixo o nome do participante e clique em 'Adicionar'. Repita até ter inserido todos os participantes. Após isso, clique em 'Sortear' para realizar o sorteio dos amigos secretos.</p>    
+                <div class="main-content__main_form">
+                    <input type="text" id="participante" class="main-content__main_input" placeholder="Nome do participante">
+                    <input type="email" id="email" class="main-content__main_input" placeholder="Email do participante">
+                    <button class="main-content__main__button" onclick="adicionarParticipante()">
+                        <span class="material-icons">person_add</span>Adicionar
+                    </button>
+                </div>
+                <div id="lista-participantes" class="main-content__main_lista-participantes">
+                </div>
+            </div>
+            <div class="main-content__main__list"> 
+                <img src="./src/assets/images/logo.png" alt="Imagem de um presente em tons escuros" class="main-content__main__logo">
+                <button class="main-content__main__button" onclick="sortearNome()" id="bt_sorteio">Sortear Amigo
+                    <span class="material-icons">person</span>
+                </button>
+            </div>    
+        </main>
+        <!-- Modal para mensagens -->
+        <div id="modal-erro" class="modal">
+            <div class="modal-content">
+                <span class="material-icons close" onclick="fecharModal()">clear</span>
+                <h3 id="modal-titulo"></h3>
+                <p id="modal-mensagem"></p>
+            </div>
+        </div>
+    </section>
+    <script type="module" src="./src/assets/scripts/frontend.js"></script>
+</body>
+</html>

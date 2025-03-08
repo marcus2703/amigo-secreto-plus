@@ -1,0 +1,243 @@
+/* components.css: define estilos específicos para componentes */
+.main-content__main_form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.main-content__main_input {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    background-color: #cbdad5;
+    width: 80%;
+    border-radius: 100px;
+    color: #040c1e;
+    padding: 0px 12px;
+    font-size: 1em;
+    height: 62px;
+    margin-right: 10px; /* Adiciona um espaço entre o input e o botão */
+}
+
+.main-content__main_input.error {
+    border: 2px solid red;
+    outline: 2px solid rgb(255, 0, 0);
+}
+
+.main-content__main__button {
+    background-color: #cbdad5;
+    color: #040c1e;
+    width: 80%;
+    max-width: 200px;
+    height: 62px;
+    padding: 16px 12px;
+    border-radius: 100px;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-content__main_lista-participantes {
+    display: none;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f5f2d8;
+    color: #040c1e;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 600px; /* Aumentando a largura máxima para acomodar colunas */
+    text-align: left;
+    font-size: 1em;
+    list-style: none;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.main-content__main_lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.main-content__main_item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.main-content__main_item:last-child {
+    border-bottom: none;
+}
+
+.participante-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.participante-info small {
+    color: #666;
+}
+
+.remove-button {
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.remove-button:hover {
+    background-color: #ffeeee;
+}
+
+.main-content__main_lista-participantes ol {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr); /* Padrão de uma coluna */
+    gap: 10px; /* Espaçamento entre os itens */
+    padding: 0;
+    margin: 0;
+}
+
+.main-content__main_lista-participantes li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    background-color: #fff; /* Adicionando cor de fundo para melhor visualização */
+    border-radius: 5px; /* Bordas arredondadas */
+}
+
+.main-content__main_lista-participantes button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Estilos para o modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 500px;
+}
+
+.close {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.modal-content {
+    background-color: #F2EAD0;
+    margin: 0% auto;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    position: relative;
+    border-radius: 10px;
+    font-family: "Inter", sans-serif;
+    color: #050D26;
+    text-align: center;
+}
+
+.modal-content h1 {
+    font-size: 1.3em;
+    line-height: 1.6;
+    color: #050D26;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+}
+
+.modal-content h2, .modal-content h3 {
+    font-size: 1.2em;
+    line-height: 1.6;
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    color: #050D26;
+}
+
+.modal-content p {
+    font-size: 1.0em;
+    font-family: "Inter", sans-serif;
+    color: #050D26;
+}
+
+.close {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga';
+}
+
+.material-icons-outlined {
+    font-family: 'Material Icons';
+    font-size: 18px;
+    margin-left: 5px;
+    color: #ff0000; /* Garantindo que a cor seja vermelha */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'liga';
+}
+
+.main-content__main__logo {
+    width: 64%; /* Reduzindo a largura para 64% (80% de 80%) */
+    max-width: 320px; /* Limitando a largura máxima proporcionalmente */
+    height: auto; /* Mantendo a proporção da imagem */
+    margin-bottom: 20px; /* Adiciona um espaço entre a imagem e o botão */
+}

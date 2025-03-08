@@ -1,0 +1,67 @@
+/* responsive.css: ajusta estilos para diferentes tamanhos de tela */
+@media (min-width: 768px) {
+    .main-content__main {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .main-content__main_text-area, .main-content__main__list {
+        width: 45%;
+    }
+
+    .main-content__main_form {
+        flex-direction: row;
+    }
+
+    .main-content__main_input {
+        margin-right: 10px;
+        margin-bottom: 0;
+    }
+
+    .main-content__main__button {
+        width: 80%;
+        max-width: 200px;
+    }
+
+    .main-content__main__logo {
+        width: 100%;
+        max-width: 517px;
+    }
+}
+
+@media (min-width: 1280px) {
+    .main-content {
+        margin: 2% auto; /* Reduzindo a margem para centralizar mais o conteúdo */
+        max-width: 1000px; /* Limitar a largura máxima do conteúdo */
+    }
+
+    .main-content__main_text-area, .main-content__main__list {
+        width: 48%; /* Ajustando a largura para centralizar melhor */
+    }
+
+    .main-content__header {
+        margin-right: 0; /* Removendo margem direita */
+        text-align: center; /* Centralizando o texto */
+        margin-bottom: 1%; /* Reduzindo a margem inferior para aproximar o título */
+    }
+}
+
+/* Estilos para as colunas da lista de participantes */
+@media (max-width: 250px) {
+    .main-content__main_lista-participantes ol {
+        grid-template-columns: repeat(1, 1fr);        
+    }
+}
+
+@media (min-width: 251px) {
+    .main-content__main_lista-participantes ol {
+        grid-template-columns: repeat(2, 1fr); /* Alterar para duas colunas em telas maiores */
+    }
+
+}
+
+@media (min-width: 450px) {
+    .main-content__main_lista-participantes ol {
+        grid-template-columns: repeat(3, 1fr); /* Alterar para três colunas em telas ainda maiores */
+    }
+}
