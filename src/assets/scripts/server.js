@@ -18,12 +18,15 @@ const __dirname = dirname(__filename);
 // Inicializações
 config(); // dotenv
 const app = express();
-const PORT = process.env.PORT || 3000;
-
+const isDev = process.env.NODE_ENV === 'development';
+const PORT = process.env.PORT || 8080;
 const ARQUIVO_LISTAS = join(__dirname, '../../data/listas.json');
 
 // Configurações do Express
-app.use(cors());
+app.use(cors({
+    origin: true, // Aceita requisições do mesmo origin que o servidor
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static(join(__dirname, '../../../')));
 
@@ -270,7 +273,17 @@ app.post('/api/listas', async (req, res) => {
     }
 });
 
-// Iniciar servidor
+// Rota para informações do ambiente (útil para debugging)
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'online',
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Iniciar servidor com log mais informativo
 app.listen(PORT, () => {
-    console.log(MENSAGENS.INFO.SERVIDOR_RODANDO(PORT));
+    console.log(`Servidor rodando em modo ${process.env.NODE_ENV}`);
+    console.log(`Porta: ${PORT}`);
 });

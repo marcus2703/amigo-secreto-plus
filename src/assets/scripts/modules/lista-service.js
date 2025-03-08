@@ -10,7 +10,7 @@ export class ListaService {
      * @property {string|null} token - Token de autenticação armazenado no localStorage
      */
     constructor() {
-        this.baseUrl = 'http://localhost:3000/api';
+        this.baseUrl = window.location.origin + '/api';
         this.token = localStorage.getItem('listaToken');
     }
 
