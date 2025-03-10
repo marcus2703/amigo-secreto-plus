@@ -19,6 +19,11 @@
         <header class="main-content__header">
             <h1>Desafio do Amigo Secreto</h1>
             <h2 id="lista-nome"></h2>
+            <div class="user-info">
+                <span id="email-usuario"></span>
+                <button id="botao-login" class="botao-login">Entrar</button>
+                <button id="botao-logout" class="botao-logout" style="display: none;">Sair</button>
+            </div>
         </header>
         <main class="main-content__main">
             <div class="main-content__main_text-area">
@@ -40,6 +45,7 @@
                 </button>
             </div>    
         </main>
+        
         <!-- Modal para mensagens -->
         <div id="modal-erro" class="modal">
             <div class="modal-content">
@@ -47,6 +53,31 @@
                 <h3 id="modal-titulo"></h3>
                 <p id="modal-mensagem"></p>
             </div>
+        </div>
+        
+        <!-- Modal de Login -->
+        <div id="modal-login" class="modal">
+            <div class="modal-content">
+                <span class="material-icons close" onclick="fecharModalLogin()">clear</span>
+                <h3>Login</h3>
+                <div class="form-login">
+                    <div class="form-group">
+                        <label for="login-email">Email:</label>
+                        <input type="email" id="login-email" class="main-content__main_input" placeholder="Digite seu email">
+                    </div>
+                    <div class="form-group">
+                        <button id="botao-confirmar-login" class="main-content__main__button">
+                            <span class="material-icons">login</span>Entrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de sorteios do usuário -->
+        <div id="listas-usuario" class="listas-usuario">
+            <h3>Minhas Listas</h3>
+            <div id="container-listas" class="container-listas"></div>
         </div>
     </section>
     <script type="module" src="./src/assets/scripts/frontend.js"></script>

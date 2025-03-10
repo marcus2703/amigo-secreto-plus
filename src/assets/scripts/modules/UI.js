@@ -8,35 +8,184 @@ export class UI {
      * @param {ListaService} listaService - Serviço para gerenciar a lista de participantes.
      * @param {SorteioService} sorteioService - Serviço para gerenciar o sorteio do amigo secreto.
      * @param {NotificacaoService} notificacaoService - Serviço para gerenciar as notificações do sistema.
+     * @param {LoginService} loginService - Serviço para gerenciar o login de usuários.
      * @property {Array} participantes - Array para armazenar os participantes.
      */
-    constructor(listaService, sorteioService, notificacaoService) {
+    constructor(listaService, sorteioService, notificacaoService, loginService) {
         this.listaService = listaService;
         this.sorteioService = sorteioService;
         this.notificacaoService = notificacaoService;
+        this.loginService = loginService;
         this.participantes = [];
-        this.inicializar();
+    }
+
+    /**
+     * Inicializa apenas o básico da UI sem tentar carregar listas
+     * @returns {Promise<void>}
+     */
+    async inicializarBasico() {
+        try {
+            this.registrarEventos();
+            this._verificarEstadoAuth();
+            
+            // Ao inicializar básico, ainda mantém acesso à mensagem de login necessário
+            const msgLogin = document.getElementById('msg-login-required');
+            if (msgLogin) {
+                msgLogin.addEventListener('click', () => window.abrirModalLogin());
+            }
+        } catch (erro) {
+            console.error('Erro ao inicializar UI básica:', erro);
+            throw erro;
+        }
     }
 
     /**
      * Inicializa a interface do usuário.
      * Este método registra os eventos necessários e carrega a lista de participantes.
      * @async
+     * @param {boolean} carregarLista - Se deve tentar carregar a lista
      * @returns {Promise<void>} Uma promise que é resolvida quando a inicialização for concluída.
      */
-    async inicializar() {
+    async inicializar(carregarLista = false) {
         try {
-            this.registrarEventos();
-            // Carrega a lista usando o listaService
-            const dados = await this.listaService.carregarLista();
-            if (dados && dados.participantes) {
-                this.participantes = dados.participantes;
-                this.atualizarListaParticipantes(this.participantes);
+            await this.inicializarBasico();
+            
+            // Só tenta carregar a lista se o parâmetro for true
+            if (carregarLista && this.loginService.estaAutenticado()) {
+                if (this.listaService.token) {
+                    const lista = await this.listaService.carregarLista();
+                    
+                    const listaNomeElement = document.getElementById('lista-nome');
+                    if (listaNomeElement) {
+                        listaNomeElement.textContent = lista.nome;
+                    }
+                    
+                    this.atualizarListaParticipantes(lista.participantes);
+                }
             }
         } catch (erro) {
-            console.error(MENSAGENS.ERRO.INICIALIZAR_UI, erro);
-            this.notificacaoService.mostrarErro(MENSAGENS.ERRO.CARREGAR_PARTICIPANTES);
+            console.error('Erro ao inicializar UI:', erro);
+            this.notificacaoService.mostrarErro('Não foi possível inicializar a aplicação.');
+            throw erro;
         }
+    }
+
+    /**
+     * Atualiza a interface para refletir que o usuário está logado
+     */
+    async atualizarUIUsuarioLogado() {
+        this._verificarEstadoAuth();
+        
+        // Garantir que o formulário esteja visível quando o usuário estiver logado
+        const formulario = document.querySelector('.main-content__main_form');
+        const msgLogin = document.getElementById('msg-login-required');
+        
+        if (formulario) {
+            formulario.style.display = 'flex';
+        }
+        
+        if (msgLogin) {
+            msgLogin.remove();
+        }
+        
+        try {
+            // Carregar listas do usuário
+            const listas = await this.loginService.obterListasDoUsuario();
+            this._renderizarListasUsuario(listas);
+        } catch (erro) {
+            console.error('Erro ao carregar listas do usuário:', erro);
+            this.notificacaoService.mostrarErro(MENSAGENS.ERRO.CARREGAR_LISTAS_USUARIO);
+        }
+    }
+    
+    /**
+     * Atualiza a interface para refletir que o usuário está deslogado
+     */
+    atualizarUIUsuarioDeslogado() {
+        this._verificarEstadoAuth();
+        
+        // Ocultar painel de listas
+        const listasUsuario = document.getElementById('listas-usuario');
+        if (listasUsuario) listasUsuario.style.display = 'none';
+        
+        // Ocultar lista de participantes
+        const listaParticipantes = document.getElementById('lista-participantes');
+        if (listaParticipantes) listaParticipantes.style.display = 'none';
+        
+        // Limpar nome da lista
+        const listaNome = document.getElementById('lista-nome');
+        if (listaNome) listaNome.textContent = '';
+    }
+
+    /**
+     * Verifica o estado de autenticação e atualiza a UI conforme necessário
+     * @private
+     */
+    _verificarEstadoAuth() {
+        const botaoLogin = document.getElementById('botao-login');
+        const botaoLogout = document.getElementById('botao-logout');
+        const emailUsuario = document.getElementById('email-usuario');
+        
+        if (this.loginService.estaAutenticado()) {
+            // Usuário logado
+            if (botaoLogin) botaoLogin.style.display = 'none';
+            if (botaoLogout) botaoLogout.style.display = 'block';
+            if (emailUsuario) {
+                emailUsuario.textContent = this.loginService.usuarioLogado.email;
+                emailUsuario.style.display = 'inline-block';
+            }
+        } else {
+            // Usuário não logado
+            if (botaoLogin) botaoLogin.style.display = 'block';
+            if (botaoLogout) botaoLogout.style.display = 'none';
+            if (emailUsuario) emailUsuario.style.display = 'none';
+        }
+    }
+    
+    /**
+     * Renderiza as listas do usuário na interface
+     * @param {Array} listas - Array de objetos contendo as listas do usuário
+     * @private
+     */
+    _renderizarListasUsuario(listas) {
+        const containerListas = document.getElementById('container-listas');
+        const listasUsuario = document.getElementById('listas-usuario');
+        
+        if (!containerListas || !listasUsuario) return;
+        
+        // Mostrar container de listas
+        listasUsuario.style.display = 'block';
+        
+        // Limpar container
+        containerListas.innerHTML = '';
+        
+        if (!listas || listas.length === 0) {
+            containerListas.innerHTML = '<p>Você ainda não possui listas.</p>';
+            return;
+        }
+        
+        // Criar card para cada lista
+        listas.forEach(lista => {
+            const card = document.createElement('div');
+            card.className = 'card-lista';
+            card.onclick = () => window.selecionarLista(lista.id);
+            
+            const title = document.createElement('h4');
+            title.textContent = lista.nome;
+            
+            const participantes = document.createElement('p');
+            participantes.textContent = `${lista.participantes.length} participante(s)`;
+            
+            const data = document.createElement('div');
+            data.className = 'data';
+            data.textContent = `Criado em: ${new Date(lista.dataCriacao).toLocaleDateString('pt-BR')}`;
+            
+            card.appendChild(title);
+            card.appendChild(participantes);
+            card.appendChild(data);
+            
+            containerListas.appendChild(card);
+        });
     }
 
     /**
@@ -75,6 +224,12 @@ export class UI {
      * @returns {void}
      */
     registrarEventos() {
+        // Adicionar evento para a mensagem de login necessário
+        const msgLogin = document.getElementById('msg-login-required');
+        if (msgLogin) {
+            msgLogin.addEventListener('click', () => window.abrirModalLogin());
+        }
+        
         document.getElementById('btnAdicionar')
             ?.addEventListener('click', () => this.adicionarParticipante());
         
@@ -82,7 +237,13 @@ export class UI {
             ?.addEventListener('click', () => this.realizarSorteio());
             
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') this.notificacaoService.fecharModal();
+            if (e.key === 'Escape') {
+                this.notificacaoService.fecharNotificacao();
+                // Não fechar modal de login com ESC se não estiver autenticado
+                if (this.loginService.estaAutenticado()) {
+                    window.fecharModalLogin();
+                }
+            }
         });
     }
 

@@ -1,4 +1,5 @@
 import { notificacaoService } from './notificacao-service.js';
+import { MENSAGENS } from './mensagens.js';
 
 export class ListaService {
     /**
@@ -94,7 +95,7 @@ export class ListaService {
     async carregarLista() {
         try {
             if (!this.token) {
-                throw new Error('Token não encontrado');
+                throw new Error(MENSAGENS.ERRO.TOKEN_NAO_ENCONTRADO);
             }
     
             const resposta = await fetch(`${this.baseUrl}/listas/${this.token}`, {
@@ -105,13 +106,18 @@ export class ListaService {
             });
     
             if (!resposta.ok) {
-                throw new Error('Falha ao carregar lista');
+                // Se o erro for 404, significa que a lista não existe mais
+                if (resposta.status === 404) {
+                    localStorage.removeItem('listaToken');
+                    this.token = null;
+                }
+                throw new Error(MENSAGENS.ERRO.CARREGAR_LISTA);
             }
     
             return await resposta.json();
         } catch (erro) {
             console.error('Erro ao carregar lista:', erro);
-            throw new Error('Não foi possível carregar a lista');
+            throw new Error(MENSAGENS.ERRO.CARREGAR_LISTA);
         }
     }
 

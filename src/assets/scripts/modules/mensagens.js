@@ -19,22 +19,33 @@ export const MENSAGENS = {
         VALIDAR_LISTA: 'Erro ao validar lista',
         TOKEN_INVALIDO: 'Token inválido ou não fornecido',
         LISTA_INVALIDA: 'Lista de participantes inválida',
+        LOGIN_FALHOU: 'Não foi possível realizar o login',
+        USUARIO_NAO_AUTENTICADO: 'Usuário não está autenticado',
+        CARREGAR_LISTAS_USUARIO: 'Não foi possível carregar as listas do usuário',
         VALIDACAO: {
             NOME_CURTO: 'Nome deve ter no mínimo 3 caracteres',
             EMAIL_INVALIDO: 'Email inválido',
             PARTICIPANTE_INVALIDO: 'Participante inválido',
             MIN_PARTICIPANTES: 'É necessário no mínimo 3 participantes para realizar o sorteio',
-            EMAILS_DUPLICADOS: 'Existem emails duplicados na lista'
+            EMAILS_DUPLICADOS: 'Existem emails duplicados na lista',
+            EMAIL_VAZIO: 'O email não pode ser vazio',
         },
         INICIALIZAR_UI: 'Erro ao inicializar interface do usuário:',
-        REMOVER_PARTICIPANTE: 'Erro ao remover participante:'
+        REMOVER_PARTICIPANTE: 'Erro ao remover participante:',
+        INICIALIZAR_UI_BASICA: 'Erro ao inicializar interface básica',
+        INICIALIZAR_UI_LOGADO: 'Erro ao inicializar para usuário logado',
+        LISTA_REMOVE: 'A lista foi removida ou não existe mais',
+        TOKEN_EXPIRADO: 'Sua sessão expirou, faça login novamente',
+        LOGIN_NECESSARIO: 'Faça login para começar a criar e gerenciar suas listas de amigo secreto',
     },
     SUCESSO: {
         PARTICIPANTE_ADICIONADO: 'Participante adicionado com sucesso',
         PARTICIPANTE_REMOVIDO: 'Participante removido com sucesso',
         SORTEIO_REALIZADO: 'Sorteio realizado! Os participantes receberão um email com seu amigo secreto',
         LISTA_CRIADA: 'Lista criada com sucesso',
-        EMAILS_ENVIADOS: 'Todos os emails foram enviados com sucesso'
+        EMAILS_ENVIADOS: 'Todos os emails foram enviados com sucesso',
+        LOGIN_SUCESSO: 'Login realizado com sucesso! Você já pode criar e gerenciar suas listas.',
+        LOGOUT_SUCESSO: 'Logout realizado com sucesso. Volte sempre!',
     },
     INFO: {
         INICIO_ENVIO_EMAILS: '🎲 Iniciando processo de envio de emails...',
@@ -74,7 +85,20 @@ export const MENSAGENS = {
         BOTOES: {
             EXCLUIR: 'Excluir',
             ADICIONAR: 'Adicionar',
-            SORTEAR: 'Sortear'
-        }
+            SORTEAR: 'Sortear',
+            LOGIN: 'Entrar',
+            LOGOUT: 'Sair',
+        },
+        LABELS: {
+            EMAIL: 'Email:',
+            SENHA: 'Senha:',
+        },
+        TEXTOS: {
+            LOGIN_REQUIRED: 'Faça login para gerenciar suas listas de amigo secreto',
+        },
+        TITULOS: {
+            LOGIN: 'Login',
+            MINHAS_LISTAS: 'Minhas Listas',
+        },
     }
 };

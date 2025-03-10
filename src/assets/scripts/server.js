@@ -21,6 +21,7 @@ const app = express();
 const isDev = process.env.NODE_ENV === 'development';
 const PORT = process.env.PORT || 8080;
 const ARQUIVO_LISTAS = join(__dirname, '../../data/listas.json');
+const ARQUIVO_USUARIOS = join(__dirname, '../../data/usuarios.json');
 
 // Configurações do Express
 app.use(cors({
@@ -53,6 +54,25 @@ async function salvarListas(listas) {
         await fs.writeFile(ARQUIVO_LISTAS, JSON.stringify({ listas }, null, 2));
     } catch (erro) {
         console.error(MENSAGENS.ERRO.SALVAR_LISTA, erro);
+        throw erro;
+    }
+}
+
+async function lerUsuarios() {
+    try {
+        const dados = await fs.readFile(ARQUIVO_USUARIOS, 'utf8');
+        return JSON.parse(dados).usuarios;
+    } catch (erro) {
+        console.error('Erro ao ler usuários:', erro);
+        return [];
+    }
+}
+
+async function salvarUsuarios(usuarios) {
+    try {
+        await fs.writeFile(ARQUIVO_USUARIOS, JSON.stringify({ usuarios }, null, 2));
+    } catch (erro) {
+        console.error('Erro ao salvar usuários:', erro);
         throw erro;
     }
 }
@@ -145,7 +165,127 @@ const validarListaSorteio = async (req, res, next) => {
     }
 };
 
-// Rotas
+// Nova rota para login
+app.post('/api/usuarios/login', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ erro: MENSAGENS.ERRO.VALIDACAO.EMAIL_VAZIO });
+        }
+        
+        let usuarios = await lerUsuarios();
+        let usuario = usuarios.find(u => u.email === email);
+        
+        const timestamp = new Date().toISOString();
+        
+        // Se o usuário não existir, cria um novo
+        if (!usuario) {
+            const token = `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            usuario = {
+                email,
+                token,
+                dataCriacao: timestamp,
+                ultimoLogin: timestamp,
+                listas: []
+            };
+            usuarios.push(usuario);
+        } else {
+            // Atualiza data de último login
+            usuario.ultimoLogin = timestamp;
+            if (!usuario.token) {
+                usuario.token = `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            }
+        }
+        
+        await salvarUsuarios(usuarios);
+        
+        res.json({
+            email: usuario.email,
+            token: usuario.token,
+            dataCriacao: usuario.dataCriacao
+        });
+    } catch (erro) {
+        console.error('Erro no login:', erro);
+        res.status(500).json({ erro: MENSAGENS.ERRO.LOGIN_FALHOU });
+    }
+});
+
+// Nova rota para obter listas do usuário
+app.get('/api/usuarios/:token/listas', async (req, res) => {
+    try {
+        const { token } = req.params;
+        
+        const usuarios = await lerUsuarios();
+        const usuario = usuarios.find(u => u.token === token);
+        
+        if (!usuario) {
+            return res.status(404).json({ erro: 'Usuário não encontrado' });
+        }
+        
+        const todasListas = await lerListas();
+        
+        // Se o usuário não tiver listas, adiciona a lista de id igual ao token do usuário
+        if (usuario.listas.length === 0) {
+            const minhaLista = todasListas.find(l => l.id === usuario.token);
+            
+            if (minhaLista) {
+                usuario.listas.push(minhaLista.id);
+                await salvarUsuarios(usuarios);
+            }
+        }
+        
+        // Filtra listas do usuário
+        const listasDoUsuario = todasListas.filter(
+            lista => usuario.listas.includes(lista.id)
+        );
+        
+        res.json(listasDoUsuario);
+    } catch (erro) {
+        console.error('Erro ao obter listas do usuário:', erro);
+        res.status(500).json({ erro: MENSAGENS.ERRO.CARREGAR_LISTAS_USUARIO });
+    }
+});
+
+// Rota existente para criar lista - Modificada para associar ao usuário
+app.post('/api/listas', async (req, res) => {
+    try {
+        const { nome, userToken } = req.body;
+        const token = gerarToken();
+        
+        const novaLista = {
+            id: token,
+            nome,
+            dataCriacao: new Date().toISOString(),
+            participantes: [],
+            sorteios: []
+        };
+        
+        const listas = await lerListas();
+        listas.push(novaLista);
+        await salvarListas(listas);
+        
+        // Se tiver token de usuário, associa a lista ao usuário
+        if (userToken) {
+            const usuarios = await lerUsuarios();
+            const usuario = usuarios.find(u => u.token === userToken);
+            
+            if (usuario) {
+                usuario.listas.push(token);
+                await salvarUsuarios(usuarios);
+            }
+        }
+        
+        res.status(201).json({ 
+            token,
+            mensagem: MENSAGENS.SUCESSO.LISTA_CRIADA
+        });
+    } catch (erro) {
+        res.status(500).json({ erro: MENSAGENS.ERRO.CRIAR_LISTA });
+    }
+});
+
+// Rotas existentes...
 app.route('/api/listas/:token')
     .get(async (req, res) => {
         try {
@@ -243,33 +383,6 @@ app.post('/api/listas/:token/sortear', validarListaSorteio, async (req, res) => 
     } catch (erro) {
         console.error('Erro detalhado:', erro);
         res.status(500).json({ erro: MENSAGENS.ERRO.REALIZAR_SORTEIO });
-    }
-});
-
-// Criar nova lista
-app.post('/api/listas', async (req, res) => {
-    try {
-        const { nome } = req.body;
-        const token = gerarToken();
-        
-        const novaLista = {
-            id: token,
-            nome,
-            dataCriacao: new Date().toISOString(),
-            participantes: [],
-            sorteios: []
-        };
-        
-        const listas = await lerListas();
-        listas.push(novaLista);
-        await salvarListas(listas);
-        
-        res.status(201).json({ 
-            token,
-            mensagem: MENSAGENS.SUCESSO.LISTA_CRIADA
-        });
-    } catch (erro) {
-        res.status(500).json({ erro: MENSAGENS.ERRO.CRIAR_LISTA });
     }
 });
 
