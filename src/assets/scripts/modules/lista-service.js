@@ -1,5 +1,6 @@
 import { notificacaoService } from './notificacao-service.js';
 import { MENSAGENS } from './mensagens.js';
+import { loginService } from './login-service.js';
 
 export class ListaService {
     /**
@@ -29,17 +30,27 @@ export class ListaService {
      */
     async criarNovaLista(nome) {
         try {
+            // Verificar se o usuário está autenticado
+            if (!loginService.estaAutenticado()) {
+                throw new Error(MENSAGENS.ERRO.USUARIO_NAO_AUTENTICADO);
+            }
+            
+            const userToken = loginService.usuarioLogado.token;
+            
             const resposta = await fetch(`${this.baseUrl}/listas`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nome })
+                body: JSON.stringify({ 
+                    nome,
+                    userToken // Passa o token do usuário para associação
+                })
             });
 
             if (!resposta.ok) {
                 const erro = await resposta.json();
-                throw new Error(erro.mensagem || 'Erro ao criar lista');
+                throw new Error(erro.mensagem || MENSAGENS.ERRO.CRIAR_LISTA);
             }
 
             const dados = await resposta.json();
@@ -54,8 +65,7 @@ export class ListaService {
         }
     }
 
-
-        /**
+    /**
      * Acessa uma lista específica usando um token
      * @param {string} token - Token único da lista
      * @returns {Promise<Object>} Dados da lista
@@ -87,7 +97,7 @@ export class ListaService {
         }
     }
 
-        /**
+    /**
      * Carrega os dados de uma lista existente
      * @returns {Promise<Object>} Dados da lista
      * @throws {Error} Quando não há token ou a lista não pode ser carregada
@@ -121,8 +131,7 @@ export class ListaService {
         }
     }
 
-    
-        /**
+    /**
      * Adiciona um novo participante à lista
      * @param {Object} participante - Dados do participante
      * @param {string} participante.nome - Nome do participante
@@ -155,8 +164,7 @@ export class ListaService {
         }
     }
 
-    
-        /**
+    /**
      * Remove um participante da lista
      * @param {number} index - Índice do participante a ser removido
      * @returns {Promise<boolean>} True se removido com sucesso

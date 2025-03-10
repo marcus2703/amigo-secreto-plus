@@ -159,8 +159,21 @@ export class UI {
         // Limpar container
         containerListas.innerHTML = '';
         
+        // Adicionar botão para criar nova lista
+        const novaBotao = document.createElement('div');
+        novaBotao.className = 'card-lista nova-lista';
+        novaBotao.innerHTML = `
+            <span class="material-icons">add_circle</span>
+            <h4>Nova Lista</h4>
+        `;
+        novaBotao.addEventListener('click', () => this._abrirModalNovaLista());
+        containerListas.appendChild(novaBotao);
+        
         if (!listas || listas.length === 0) {
-            containerListas.innerHTML = '<p>Você ainda não possui listas.</p>';
+            const mensagem = document.createElement('p');
+            mensagem.textContent = 'Você ainda não possui listas. Clique em "Nova Lista" para criar.';
+            mensagem.className = 'lista-vazia-mensagem';
+            containerListas.appendChild(mensagem);
             return;
         }
         
@@ -186,6 +199,69 @@ export class UI {
             
             containerListas.appendChild(card);
         });
+    }
+    
+    /**
+     * Abre o modal para criar uma nova lista
+     * @private
+     */
+    _abrirModalNovaLista() {
+        // Cria o modal de nova lista dinamicamente se não existir
+        let modalNovaLista = document.getElementById('modal-nova-lista');
+        
+        if (!modalNovaLista) {
+            modalNovaLista = document.createElement('div');
+            modalNovaLista.id = 'modal-nova-lista';
+            modalNovaLista.className = 'modal';
+            
+            modalNovaLista.innerHTML = `
+                <div class="modal-content">
+                    <span class="material-icons close" onclick="fecharModalNovaLista()">clear</span>
+                    <h3>Nova Lista de Amigo Secreto</h3>
+                    <div class="form-login">
+                        <div class="form-group">
+                            <label for="nova-lista-nome">Nome da Lista:</label>
+                            <input type="text" id="nova-lista-nome" class="main-content__main_input" placeholder="Digite o nome da lista">
+                        </div>
+                        <div class="form-group">
+                            <button id="botao-criar-lista" class="main-content__main__button">
+                                <span class="material-icons">add</span>Criar Lista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.main-content').appendChild(modalNovaLista);
+            
+            // Adiciona evento ao botão de criar
+            document.getElementById('botao-criar-lista').addEventListener('click', async () => {
+                const nomeInput = document.getElementById('nova-lista-nome');
+                const nome = nomeInput?.value?.trim();
+                
+                if (!nome) {
+                    this.notificacaoService.mostrarErro('Digite um nome para a lista');
+                    return;
+                }
+                
+                try {
+                    await loginService.criarNovaLista(nome);
+                    this.notificacaoService.mostrarSucesso(`Lista "${nome}" criada com sucesso!`);
+                    
+                    // Atualiza a lista de listas
+                    const listas = await this.loginService.obterListasDoUsuario();
+                    this._renderizarListasUsuario(listas);
+                    
+                    // Fecha o modal
+                    window.fecharModalNovaLista();
+                } catch (erro) {
+                    console.error('Erro ao criar lista:', erro);
+                    this.notificacaoService.mostrarErro(erro.message || MENSAGENS.ERRO.CRIAR_LISTA);
+                }
+            });
+        }
+        
+        modalNovaLista.style.display = 'block';
     }
 
     /**

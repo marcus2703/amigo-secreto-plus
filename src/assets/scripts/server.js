@@ -165,7 +165,7 @@ const validarListaSorteio = async (req, res, next) => {
     }
 };
 
-// Nova rota para login
+// Na rota de login - ajuste para criar a primeira lista automaticamente para novos usuários
 app.post('/api/usuarios/login', async (req, res) => {
     try {
         const { email } = req.body;
@@ -178,9 +178,10 @@ app.post('/api/usuarios/login', async (req, res) => {
         let usuario = usuarios.find(u => u.email === email);
         
         const timestamp = new Date().toISOString();
+        const isNovoUsuario = !usuario;
         
         // Se o usuário não existir, cria um novo
-        if (!usuario) {
+        if (isNovoUsuario) {
             const token = `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             usuario = {
                 email,
@@ -200,6 +201,29 @@ app.post('/api/usuarios/login', async (req, res) => {
         
         await salvarUsuarios(usuarios);
         
+        // Se for novo usuário ou não tiver listas, cria uma lista inicial
+        if (isNovoUsuario || usuario.listas.length === 0) {
+            // Cria uma lista inicial com o mesmo token do usuário
+            const listaToken = usuario.token;
+            const nomeLista = `Lista de ${email.split('@')[0]}`;
+            
+            const listas = await lerListas();
+            const novaLista = {
+                id: listaToken,
+                nome: nomeLista,
+                dataCriacao: timestamp,
+                participantes: [],
+                sorteios: []
+            };
+            
+            listas.push(novaLista);
+            await salvarListas(listas);
+            
+            // Associa a lista ao usuário
+            usuario.listas.push(listaToken);
+            await salvarUsuarios(usuarios);
+        }
+        
         res.json({
             email: usuario.email,
             token: usuario.token,
@@ -211,7 +235,7 @@ app.post('/api/usuarios/login', async (req, res) => {
     }
 });
 
-// Nova rota para obter listas do usuário
+// Rota para obter listas do usuário - melhoria para retornar listas existentes
 app.get('/api/usuarios/:token/listas', async (req, res) => {
     try {
         const { token } = req.params;
@@ -225,20 +249,16 @@ app.get('/api/usuarios/:token/listas', async (req, res) => {
         
         const todasListas = await lerListas();
         
-        // Se o usuário não tiver listas, adiciona a lista de id igual ao token do usuário
-        if (usuario.listas.length === 0) {
-            const minhaLista = todasListas.find(l => l.id === usuario.token);
-            
-            if (minhaLista) {
-                usuario.listas.push(minhaLista.id);
-                await salvarUsuarios(usuarios);
-            }
-        }
-        
         // Filtra listas do usuário
         const listasDoUsuario = todasListas.filter(
             lista => usuario.listas.includes(lista.id)
         );
+        
+        // Se o usuário não tiver listas, retorna array vazio
+        // (não deveria acontecer com as alterações no login)
+        if (listasDoUsuario.length === 0) {
+            console.log(`Usuário ${usuario.email} não tem listas associadas`);
+        }
         
         res.json(listasDoUsuario);
     } catch (erro) {
@@ -247,10 +267,20 @@ app.get('/api/usuarios/:token/listas', async (req, res) => {
     }
 });
 
-// Rota existente para criar lista - Modificada para associar ao usuário
+// Modificar a rota de criar lista para associar ao usuário corretamente
 app.post('/api/listas', async (req, res) => {
     try {
         const { nome, userToken } = req.body;
+        
+        if (!nome) {
+            return res.status(400).json({ erro: 'Nome da lista é obrigatório' });
+        }
+        
+        if (!userToken) {
+            return res.status(400).json({ erro: 'Token de usuário é obrigatório' });
+        }
+        
+        // Gera token para a lista
         const token = gerarToken();
         
         const novaLista = {
@@ -261,26 +291,28 @@ app.post('/api/listas', async (req, res) => {
             sorteios: []
         };
         
+        // Adiciona a lista ao arquivo de listas
         const listas = await lerListas();
         listas.push(novaLista);
         await salvarListas(listas);
         
-        // Se tiver token de usuário, associa a lista ao usuário
-        if (userToken) {
-            const usuarios = await lerUsuarios();
-            const usuario = usuarios.find(u => u.token === userToken);
-            
-            if (usuario) {
-                usuario.listas.push(token);
-                await salvarUsuarios(usuarios);
-            }
+        // Associa a lista ao usuário
+        const usuarios = await lerUsuarios();
+        const usuario = usuarios.find(u => u.token === userToken);
+        
+        if (!usuario) {
+            return res.status(404).json({ erro: 'Usuário não encontrado' });
         }
+        
+        usuario.listas.push(token);
+        await salvarUsuarios(usuarios);
         
         res.status(201).json({ 
             token,
             mensagem: MENSAGENS.SUCESSO.LISTA_CRIADA
         });
     } catch (erro) {
+        console.error('Erro ao criar lista:', erro);
         res.status(500).json({ erro: MENSAGENS.ERRO.CRIAR_LISTA });
     }
 });

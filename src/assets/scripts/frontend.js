@@ -251,13 +251,60 @@ window.selecionarLista = async function(token) {
         listaService.token = token;
         
         // Inicializa a UI com a nova lista
-        await ui.inicializar();
+        await ui.inicializar(true);
+        
+        // Mostra o formulário de participantes
+        mostrarFormularioParticipantes();
         
         // Esconde o painel de listas
         const listasUsuario = document.getElementById('listas-usuario');
         if (listasUsuario) listasUsuario.style.display = 'none';
+        
+        // Mostra o botão de voltar para listas
+        const botaoVoltar = document.getElementById('botao-voltar-listas');
+        if (botaoVoltar) botaoVoltar.style.display = 'flex';
+        
+        notificacaoService.mostrarSucesso('Lista carregada com sucesso!');
     } catch (erro) {
         console.error('Erro ao selecionar lista:', erro);
         notificacaoService.mostrarErro('Erro ao carregar a lista');
+    }
+};
+
+window.fecharModalNovaLista = function() {
+    const modalNovaLista = document.getElementById('modal-nova-lista');
+    if (modalNovaLista) modalNovaLista.style.display = 'none';
+    
+    // Limpa o campo de entrada
+    const nomeInput = document.getElementById('nova-lista-nome');
+    if (nomeInput) nomeInput.value = '';
+};
+
+window.voltarParaListas = async function() {
+    try {
+        // Mostra o painel de listas
+        const listasUsuario = document.getElementById('listas-usuario');
+        if (listasUsuario) {
+            listasUsuario.style.display = 'block';
+            
+            // Atualiza a lista de listas (para caso tenha havido mudanças)
+            const listas = await loginService.obterListasDoUsuario();
+            ui._renderizarListasUsuario(listas);
+        }
+        
+        // Esconde a lista de participantes
+        const listaParticipantes = document.getElementById('lista-participantes');
+        if (listaParticipantes) listaParticipantes.style.display = 'none';
+        
+        // Esconde o botão de voltar
+        const botaoVoltar = document.getElementById('botao-voltar-listas');
+        if (botaoVoltar) botaoVoltar.style.display = 'none';
+        
+        // Reseta o nome da lista atual
+        const listaNome = document.getElementById('lista-nome');
+        if (listaNome) listaNome.textContent = '';
+    } catch (erro) {
+        console.error('Erro ao voltar para listas:', erro);
+        notificacaoService.mostrarErro('Erro ao carregar suas listas');
     }
 };

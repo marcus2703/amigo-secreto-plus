@@ -383,3 +383,69 @@
         box-shadow: 0 0 0 10px rgba(151, 93, 95, 0);
     }
 }
+
+/* No final do arquivo, adicione estes estilos */
+.card-lista.nova-lista {
+    background-color: #cab5a0;
+    border: 2px dashed #975d5f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.card-lista.nova-lista:hover {
+    background-color: #d8c4af;
+    transform: translateY(-5px);
+}
+
+.card-lista.nova-lista .material-icons {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #975d5f;
+}
+
+.card-lista.nova-lista h4 {
+    color: #975d5f;
+    font-weight: bold;
+}
+
+.lista-vazia-mensagem {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 15px;
+    color: #975d5f;
+    font-style: italic;
+    background-color: #f5f2d8;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+#modal-nova-lista .modal-content {
+    max-width: 400px;
+}
+
+/* Botão voltar para listas */
+.botao-voltar-listas {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #975d5f;
+    color: #f5f2d8;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+    z-index: 100;
+}
+
+.botao-voltar-listas:hover {
+    transform: scale(1.1);
+}
