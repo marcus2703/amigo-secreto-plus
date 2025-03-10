@@ -100,7 +100,20 @@ function configurarEventosLogin() {
     
     if (botaoLogout) {
         botaoLogout.addEventListener('click', () => {
+            // Limpa o token da lista no listaService também
+            listaService.token = null;
+            
+            // Faz o logout
             loginService.logout();
+            
+            // Limpa a lista de participantes na UI
+            const listaParticipantes = document.getElementById('lista-participantes');
+            if (listaParticipantes) {
+                listaParticipantes.style.display = 'none';
+                listaParticipantes.innerHTML = '';
+            }
+            
+            // Atualiza a UI
             ui.atualizarUIUsuarioDeslogado();
             
             // Ocultar formulário ao fazer logout
@@ -145,7 +158,7 @@ function configurarEventosLogin() {
     }
 }
 
-// Expor funções para o HTML
+// Modifiquei a função adicionarParticipante para não exibir confirmação de sucesso
 window.adicionarParticipante = async function() {
     const nomeInput = document.getElementById('participante');
     const emailInput = document.getElementById('email');
@@ -156,6 +169,12 @@ window.adicionarParticipante = async function() {
         const nome = nomeInput.value.trim();
         const email = emailInput.value.trim();
         
+        // Validação rápida para evitar requisição desnecessária
+        if (!nome || !email) {
+            notificacaoService.mostrarErro('Nome e email são obrigatórios');
+            return;
+        }
+        
         const participante = new Participante(nome, email);
         const validacao = ValidacaoUtils.validarParticipante(participante);
         
@@ -164,16 +183,20 @@ window.adicionarParticipante = async function() {
             return;
         }
         
+        // Adiciona o participante
         await listaService.adicionarParticipante(participante);
         
-        // Limpar campos e atualizar UI
+        // Limpa os campos do formulário
         nomeInput.value = '';
         emailInput.value = '';
+        nomeInput.focus(); // Foca no campo de nome para facilitar adição contínua
         
+        // Atualiza a lista sem mostrar confirmação
         const lista = await listaService.carregarLista();
         ui.atualizarListaParticipantes(lista.participantes);
         
-        notificacaoService.mostrarSucesso('Participante adicionado com sucesso');
+        // Não mostra notificação de sucesso para tornar a experiência mais fluida
+        // notificacaoService.mostrarSucesso('Participante adicionado com sucesso');
     } catch (erro) {
         console.error('Erro ao adicionar participante:', erro);
         notificacaoService.mostrarErro('Erro ao adicionar participante');
@@ -307,4 +330,9 @@ window.voltarParaListas = async function() {
         console.error('Erro ao voltar para listas:', erro);
         notificacaoService.mostrarErro('Erro ao carregar suas listas');
     }
+};
+
+window.fecharModalConfirmacao = function() {
+    const modalConfirmacao = document.getElementById('modal-confirmar-exclusao');
+    if (modalConfirmacao) modalConfirmacao.style.display = 'none';
 };

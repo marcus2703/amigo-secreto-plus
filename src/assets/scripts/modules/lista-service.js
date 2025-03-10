@@ -198,4 +198,41 @@ export class ListaService {
             throw new Error('Não foi possível remover o participante');
         }
     }
+
+    /**
+     * Remove uma lista
+     * @param {string} listaId - ID da lista a ser removida
+     * @returns {Promise<boolean>} True se removida com sucesso
+     * @throws {Error} Quando há falha na remoção da lista
+     */
+    async removerLista(listaId) {
+        try {
+            if (!loginService.estaAutenticado()) {
+                throw new Error(MENSAGENS.ERRO.USUARIO_NAO_AUTENTICADO);
+            }
+
+            const resposta = await fetch(`${this.baseUrl}/listas/${listaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${loginService.usuarioLogado.token}`
+                }
+            });
+
+            if (!resposta.ok) {
+                throw new Error(MENSAGENS.ERRO.REMOVER_LISTA);
+            }
+
+            // Se a lista removida for a atual, limpar o token local
+            if (this.token === listaId) {
+                localStorage.removeItem('listaToken');
+                this.token = null;
+            }
+
+            return true;
+        } catch (erro) {
+            console.error('Erro ao remover lista:', erro);
+            throw new Error(MENSAGENS.ERRO.REMOVER_LISTA);
+        }
+    }
 }

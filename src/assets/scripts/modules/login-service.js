@@ -72,7 +72,7 @@ export class LoginService {
     logout() {
         this.usuarioLogado = null;
         localStorage.removeItem('usuarioLogado');
-        localStorage.removeItem('listaToken'); // Limpa também o token da lista atual
+        localStorage.removeItem('listaToken'); // Já estava removendo o token da lista
     }
 
     /**

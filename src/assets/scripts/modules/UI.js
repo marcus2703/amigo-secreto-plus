@@ -181,10 +181,27 @@ export class UI {
         listas.forEach(lista => {
             const card = document.createElement('div');
             card.className = 'card-lista';
-            card.onclick = () => window.selecionarLista(lista.id);
+            card.dataset.listId = lista.id;
+            
+            // Cabeçalho do card contendo título e botão de excluir
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'card-lista-header';
             
             const title = document.createElement('h4');
             title.textContent = lista.nome;
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'btn-delete-lista';
+            deleteButton.innerHTML = '<span class="material-icons">delete</span>';
+            deleteButton.title = 'Excluir lista';
+            // Impede que o clique no botão de exclusão propague para o card
+            deleteButton.onclick = (e) => {
+                e.stopPropagation();
+                this._confirmarExclusaoLista(lista.id, lista.nome);
+            };
+            
+            cardHeader.appendChild(title);
+            cardHeader.appendChild(deleteButton);
             
             const participantes = document.createElement('p');
             participantes.textContent = `${lista.participantes.length} participante(s)`;
@@ -193,12 +210,103 @@ export class UI {
             data.className = 'data';
             data.textContent = `Criado em: ${new Date(lista.dataCriacao).toLocaleDateString('pt-BR')}`;
             
-            card.appendChild(title);
+            card.appendChild(cardHeader);
             card.appendChild(participantes);
             card.appendChild(data);
             
+            // Adiciona o evento de clique para o card (seleciona a lista)
+            card.addEventListener('click', () => window.selecionarLista(lista.id));
+            
             containerListas.appendChild(card);
         });
+    }
+
+    /**
+     * Exibe modal de confirmação para exclusão de lista
+     * @param {string} listaId - ID da lista a ser excluída
+     * @param {string} listaNome - Nome da lista para exibir na mensagem
+     * @private
+     */
+    _confirmarExclusaoLista(listaId, listaNome) {
+        // Cria o modal de confirmação dinamicamente
+        let modalConfirmacao = document.getElementById('modal-confirmar-exclusao');
+        
+        if (!modalConfirmacao) {
+            modalConfirmacao = document.createElement('div');
+            modalConfirmacao.id = 'modal-confirmar-exclusao';
+            modalConfirmacao.className = 'modal';
+            
+            modalConfirmacao.innerHTML = `
+                <div class="modal-content">
+                    <span class="material-icons close" onclick="fecharModalConfirmacao()">clear</span>
+                    <h3>Confirmar Exclusão</h3>
+                    <p id="mensagem-confirmacao"></p>
+                    <div class="modal-buttons">
+                        <button id="btn-cancelar" class="btn-cancelar">Cancelar</button>
+                        <button id="btn-confirmar-exclusao" class="btn-confirmar-exclusao">Excluir</button>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.main-content').appendChild(modalConfirmacao);
+            
+            // Adiciona evento ao botão de cancelar
+            document.getElementById('btn-cancelar').addEventListener('click', () => {
+                window.fecharModalConfirmacao();
+            });
+        }
+        
+        // Atualiza a mensagem de confirmação
+        const mensagemConfirmacao = document.getElementById('mensagem-confirmacao');
+        if (mensagemConfirmacao) {
+            mensagemConfirmacao.textContent = `Tem certeza que deseja excluir a lista "${listaNome}"? Esta ação não pode ser desfeita.`;
+        }
+        
+        // Atualiza o evento do botão de confirmação
+        const btnConfirmar = document.getElementById('btn-confirmar-exclusao');
+        if (btnConfirmar) {
+            // Remove eventos anteriores (evita duplicação)
+            const btnClone = btnConfirmar.cloneNode(true);
+            btnConfirmar.parentNode.replaceChild(btnClone, btnConfirmar);
+            
+            btnClone.addEventListener('click', async () => {
+                try {
+                    await this.listaService.removerLista(listaId);
+                    
+                    // Atualiza a lista de listas
+                    const listas = await this.loginService.obterListasDoUsuario();
+                    this._renderizarListasUsuario(listas);
+                    
+                    this.notificacaoService.mostrarSucesso(MENSAGENS.SUCESSO.LISTA_REMOVIDA);
+                    
+                    // Fecha o modal
+                    window.fecharModalConfirmacao();
+                    
+                    // Se a lista excluída for a lista atual, volta para a lista de listas
+                    if (this.listaService.token === listaId || this.listaService.token === null) {
+                        // Limpa a lista de participantes
+                        const listaParticipantes = document.getElementById('lista-participantes');
+                        if (listaParticipantes) {
+                            listaParticipantes.style.display = 'none';
+                            listaParticipantes.innerHTML = '';
+                        }
+                        
+                        // Limpa o nome da lista
+                        const listaNomeElement = document.getElementById('lista-nome');
+                        if (listaNomeElement) {
+                            listaNomeElement.textContent = '';
+                        }
+                    }
+                } catch (erro) {
+                    console.error('Erro ao excluir lista:', erro);
+                    this.notificacaoService.mostrarErro(MENSAGENS.ERRO.REMOVER_LISTA);
+                    window.fecharModalConfirmacao();
+                }
+            });
+        }
+        
+        // Exibe o modal
+        modalConfirmacao.style.display = 'block';
     }
     
     /**
@@ -206,7 +314,7 @@ export class UI {
      * @private
      */
     _abrirModalNovaLista() {
-        // Cria o modal de nova lista dinamicamente se não existir
+        // Utilizamos window._abrirModalNovaLista, mas adaptando o contexto
         let modalNovaLista = document.getElementById('modal-nova-lista');
         
         if (!modalNovaLista) {
@@ -234,36 +342,39 @@ export class UI {
             
             document.querySelector('.main-content').appendChild(modalNovaLista);
             
+            // Criamos uma referência ao this atual para usar dentro do evento
+            const self = this;
+            
             // Adiciona evento ao botão de criar
             document.getElementById('botao-criar-lista').addEventListener('click', async () => {
                 const nomeInput = document.getElementById('nova-lista-nome');
                 const nome = nomeInput?.value?.trim();
                 
                 if (!nome) {
-                    this.notificacaoService.mostrarErro('Digite um nome para a lista');
+                    self.notificacaoService.mostrarErro('Digite um nome para a lista');
                     return;
                 }
                 
                 try {
-                    await loginService.criarNovaLista(nome);
-                    this.notificacaoService.mostrarSucesso(`Lista "${nome}" criada com sucesso!`);
+                    await self.listaService.criarNovaLista(nome);
+                    self.notificacaoService.mostrarSucesso(`Lista "${nome}" criada com sucesso!`);
                     
                     // Atualiza a lista de listas
-                    const listas = await this.loginService.obterListasDoUsuario();
-                    this._renderizarListasUsuario(listas);
+                    const listas = await self.loginService.obterListasDoUsuario();
+                    self._renderizarListasUsuario(listas);
                     
                     // Fecha o modal
                     window.fecharModalNovaLista();
                 } catch (erro) {
                     console.error('Erro ao criar lista:', erro);
-                    this.notificacaoService.mostrarErro(erro.message || MENSAGENS.ERRO.CRIAR_LISTA);
+                    self.notificacaoService.mostrarErro(erro.message || MENSAGENS.ERRO.CRIAR_LISTA);
                 }
             });
         }
         
         modalNovaLista.style.display = 'block';
     }
-
+    
     /**
      * Limpa o valor de um campo do formulário e remove seus estados de erro
      * @param {HTMLElement} campo - Campo do formulário a ser limpo

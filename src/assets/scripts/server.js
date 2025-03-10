@@ -418,6 +418,53 @@ app.post('/api/listas/:token/sortear', validarListaSorteio, async (req, res) => 
     }
 });
 
+// Adicionar esta nova rota para excluir listas
+app.delete('/api/listas/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const authorization = req.headers.authorization;
+        
+        if (!authorization || !authorization.startsWith('Bearer ')) {
+            return res.status(401).json({ erro: 'Não autorizado' });
+        }
+        
+        const userToken = authorization.split(' ')[1];
+        
+        // Verificar se o usuário existe
+        const usuarios = await lerUsuarios();
+        const usuario = usuarios.find(u => u.token === userToken);
+        
+        if (!usuario) {
+            return res.status(404).json({ erro: 'Usuário não encontrado' });
+        }
+        
+        // Verificar se a lista pertence ao usuário
+        if (!usuario.listas.includes(id)) {
+            return res.status(403).json({ erro: 'Você não tem permissão para remover esta lista' });
+        }
+        
+        // Remover a lista do arquivo listas.json
+        const listas = await lerListas();
+        const indexLista = listas.findIndex(l => l.id === id);
+        
+        if (indexLista === -1) {
+            return res.status(404).json({ erro: 'Lista não encontrada' });
+        }
+        
+        listas.splice(indexLista, 1);
+        await salvarListas(listas);
+        
+        // Remover a lista da lista de listas do usuário
+        usuario.listas = usuario.listas.filter(listaId => listaId !== id);
+        await salvarUsuarios(usuarios);
+        
+        res.json({ mensagem: 'Lista removida com sucesso' });
+    } catch (erro) {
+        console.error('Erro ao remover lista:', erro);
+        res.status(500).json({ erro: 'Não foi possível remover a lista' });
+    }
+});
+
 // Rota para informações do ambiente (útil para debugging)
 app.get('/api/health', (req, res) => {
     res.json({

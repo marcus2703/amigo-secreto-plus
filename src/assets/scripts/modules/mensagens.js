@@ -37,6 +37,8 @@ export const MENSAGENS = {
         LISTA_REMOVE: 'A lista foi removida ou não existe mais',
         TOKEN_EXPIRADO: 'Sua sessão expirou, faça login novamente',
         LOGIN_NECESSARIO: 'Faça login para começar a criar e gerenciar suas listas de amigo secreto',
+        REMOVER_LISTA: 'Não foi possível remover a lista',
+        CONFIRMAR_REMOCAO_LISTA: 'Tem certeza que deseja remover esta lista? Esta ação não pode ser desfeita.',
     },
     SUCESSO: {
         PARTICIPANTE_ADICIONADO: 'Participante adicionado com sucesso',
@@ -46,6 +48,7 @@ export const MENSAGENS = {
         EMAILS_ENVIADOS: 'Todos os emails foram enviados com sucesso',
         LOGIN_SUCESSO: 'Login realizado com sucesso! Você já pode criar e gerenciar suas listas.',
         LOGOUT_SUCESSO: 'Logout realizado com sucesso. Volte sempre!',
+        LISTA_REMOVIDA: 'Lista removida com sucesso',
     },
     INFO: {
         INICIO_ENVIO_EMAILS: '🎲 Iniciando processo de envio de emails...',
