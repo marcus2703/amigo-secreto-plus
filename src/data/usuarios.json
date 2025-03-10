@@ -1,0 +1,13 @@
+{
+  "usuarios": [
+    {
+      "email": "teste@teste.com",
+      "token": "token_1741576024630_zzw53to49",
+      "dataCriacao": "2025-03-10T03:07:04.630Z",
+      "ultimoLogin": "2025-03-10T03:07:04.630Z",
+      "listas": [
+        "token_1741576024630_zzw53to49"
+      ]
+    }
+  ]
+}
