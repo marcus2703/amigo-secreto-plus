@@ -39,7 +39,18 @@ function gerarToken() {
     return crypto.randomBytes(16).toString('hex');
 }
 
+// Adicione estas variáveis de armazenamento em memória
+let listasEmMemoria = { listas: [] };
+let usuariosEmMemoria = { usuarios: [] };
+
 async function lerListas() {
+    // Em produção, usamos a memória
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Lendo listas da memória (prod)', listasEmMemoria.listas.length);
+        return listasEmMemoria.listas;
+    }
+
+    // Em desenvolvimento, usamos os arquivos
     try {
         const dados = await fs.readFile(ARQUIVO_LISTAS, 'utf8');
         return JSON.parse(dados).listas;
@@ -50,6 +61,14 @@ async function lerListas() {
 }
 
 async function salvarListas(listas) {
+    // Em produção, salvamos na memória
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Salvando listas na memória (prod)', listas.length);
+        listasEmMemoria.listas = listas;
+        return;
+    }
+
+    // Em desenvolvimento, salvamos nos arquivos
     try {
         await fs.writeFile(ARQUIVO_LISTAS, JSON.stringify({ listas }, null, 2));
     } catch (erro) {
@@ -59,6 +78,13 @@ async function salvarListas(listas) {
 }
 
 async function lerUsuarios() {
+    // Em produção, usamos a memória
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Lendo usuários da memória (prod)', usuariosEmMemoria.usuarios.length);
+        return usuariosEmMemoria.usuarios;
+    }
+
+    // Em desenvolvimento, usamos os arquivos
     try {
         const dados = await fs.readFile(ARQUIVO_USUARIOS, 'utf8');
         return JSON.parse(dados).usuarios;
@@ -69,6 +95,14 @@ async function lerUsuarios() {
 }
 
 async function salvarUsuarios(usuarios) {
+    // Em produção, salvamos na memória
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Salvando usuários na memória (prod)', usuarios.length);
+        usuariosEmMemoria.usuarios = usuarios;
+        return;
+    }
+
+    // Em desenvolvimento, salvamos nos arquivos
     try {
         await fs.writeFile(ARQUIVO_USUARIOS, JSON.stringify({ usuarios }, null, 2));
     } catch (erro) {
@@ -165,8 +199,10 @@ const validarListaSorteio = async (req, res, next) => {
     }
 };
 
-// Na rota de login - ajuste para criar a primeira lista automaticamente para novos usuários
+// No início de rotas importantes, adicione logs para depuração
 app.post('/api/usuarios/login', async (req, res) => {
+    console.log('API: Login iniciado', req.body);
+    
     try {
         const { email } = req.body;
         
@@ -237,6 +273,8 @@ app.post('/api/usuarios/login', async (req, res) => {
 
 // Rota para obter listas do usuário - melhoria para retornar listas existentes
 app.get('/api/usuarios/:token/listas', async (req, res) => {
+    console.log('API: Obtendo listas do usuário', req.params.token);
+    
     try {
         const { token } = req.params;
         
@@ -474,8 +512,53 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// Adicione isso no seu servidor
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    env: process.env.NODE_ENV,
+    listsInMemory: listasEmMemoria.listas.length,
+    usersInMemory: usuariosEmMemoria.usuarios.length,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Inicializar com dados padrão para produção
+async function inicializarDadosProducao() {
+    if (process.env.NODE_ENV === 'production') {
+        console.log('Inicializando dados padrão para produção');
+
+        // Se não houver dados em memória ainda, crie exemplos
+        if (!listasEmMemoria.listas || listasEmMemoria.listas.length === 0) {
+            listasEmMemoria.listas = [
+                {
+                    id: "token_demo_lista",
+                    nome: "Lista de Demonstração",
+                    dataCriacao: new Date().toISOString(),
+                    participantes: [],
+                    sorteios: []
+                }
+            ];
+        }
+
+        if (!usuariosEmMemoria.usuarios || usuariosEmMemoria.usuarios.length === 0) {
+            usuariosEmMemoria.usuarios = [
+                {
+                    email: "demo@exemplo.com",
+                    token: "token_demo_usuario",
+                    dataCriacao: new Date().toISOString(),
+                    ultimoLogin: new Date().toISOString(),
+                    listas: ["token_demo_lista"]
+                }
+            ];
+        }
+    }
+}
+
 // Iniciar servidor com log mais informativo
-app.listen(PORT, () => {
-    console.log(`Servidor rodando em modo ${process.env.NODE_ENV}`);
-    console.log(`Porta: ${PORT}`);
+inicializarDadosProducao().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando em modo ${process.env.NODE_ENV}`);
+        console.log(`Porta: ${PORT}`);
+    });
 });
